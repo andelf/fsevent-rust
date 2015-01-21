@@ -17,7 +17,8 @@ use std::raw::Slice;
 use std::str::from_utf8;
 use std::ffi::c_str_to_bytes;
 
-use std::sync::mpsc::{Sender};
+use std::thread::Thread;
+use std::sync::mpsc::Sender;
 
 pub const NULL: cf::CFRef = cf::NULL;
 
@@ -154,33 +155,37 @@ impl<'a> FsEvent<'a> {
       cf::CFRelease(placeholder);
     }
   }
-  pub fn observe(&self) {
+  pub fn observe(&self) -> Thread {
     let stream_context = default_stream_context(self);
 
     let cb = callback as *mut _;
 
-    unsafe {
-      let stream = fs::FSEventStreamCreate(cf::kCFAllocatorDefault,
-       cb,
-       &stream_context,
-       self.paths,
-       self.since_when,
-       self.latency,
-       self.flags);
+    let observing_thread = Thread::spawn(move || {
 
-      // fs::FSEventStreamShow(stream);
+      unsafe {
+        let stream = fs::FSEventStreamCreate(cf::kCFAllocatorDefault,
+         cb,
+         &stream_context,
+         self.paths,
+         self.since_when,
+         self.latency,
+         self.flags);
 
-      fs::FSEventStreamScheduleWithRunLoop(stream,
-        cf::CFRunLoopGetCurrent(),
-        cf::kCFRunLoopDefaultMode);
+        // fs::FSEventStreamShow(stream);
 
-      fs::FSEventStreamStart(stream);
-      cf::CFRunLoopRun();
+        fs::FSEventStreamScheduleWithRunLoop(stream,
+          cf::CFRunLoopGetCurrent(),
+          cf::kCFRunLoopDefaultMode);
 
-      fs::FSEventStreamFlushSync(stream);
-      fs::FSEventStreamStop(stream);
+        fs::FSEventStreamStart(stream);
+        cf::CFRunLoopRun();
 
-    }
+        fs::FSEventStreamFlushSync(stream);
+        fs::FSEventStreamStop(stream);
+
+      }
+    });
+    observing_thread
   }
 }
 

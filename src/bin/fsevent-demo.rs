@@ -8,11 +8,9 @@ use std::thread::Thread;
 fn main() {
   let (sender, receiver) = channel::<fsevent::Event>();
 
-  let _t = Thread::spawn(move || {
-    let fsevent = fsevent::FsEvent::new(sender);
-    fsevent.append_path("../../");
-    fsevent.observe();
-  });
+  let fsevent = fsevent::FsEvent::new(sender);
+  fsevent.append_path("../../");
+  let observing_thread = fsevent.observe();
 
   loop {
     select! (
