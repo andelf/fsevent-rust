@@ -35,6 +35,13 @@ pub const kCFURLPOSIXPathStyle: CFURLPathStyle = 0;
 pub const kCFURLHFSPathStyle: CFURLPathStyle = 1;
 pub const kCFURLWindowsPathStyle: CFURLPathStyle = 2;
 
+pub const kCFCompareEqualTo: i32     = 0;
+pub type CFComparisonResult = i32;
+
+// MacOS uses Case Insensitive path
+pub const kCFCompareCaseInsensitive: u32 = 1;
+pub type CFStringCompareFlags = u32;
+
 
 #[repr(C)]
 pub struct CFArrayCallBacks {
@@ -76,6 +83,8 @@ extern "C" {
     pub fn CFURLCopyFileSystemPath(anUrl: CFURLRef, path_style: CFURLPathStyle) -> CFStringRef;
 
     pub fn CFURLResourceIsReachable(res: CFURLRef, err: CFErrorRef) -> bool;
+    pub fn CFStringCompare(theString1: CFStringRef, theString2: CFStringRef, compareOptions: CFStringCompareFlags) -> CFComparisonResult;
+    pub fn CFArrayRemoveValueAtIndex(theArray: CFMutableArrayRef, idx: CFIndex);
 }
 
 
